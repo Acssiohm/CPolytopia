@@ -28,10 +28,10 @@ bool Tile::setResource(ResourceID res) {
 	return true;
 }
 
-BuildingID Tile::getBuildingID() const {
+BuildingID Tile::getBuilding() const {
 	return m_building;
 }
-bool Tile::setBuildingID(BuildingID build) {
+bool Tile::setBuilding(BuildingID build) {
 	// TODO: verify if the building can be on the current terrain
 	m_building = build;
 	return true;

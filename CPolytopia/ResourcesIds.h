@@ -30,16 +30,16 @@ enum class ResourceID {
 	Whale
 };
 
-constexpr int numberOfBuildings = 7 - 2;
+constexpr int numberOfBuildings = 7;
 
 enum class BuildingID {
 	None = 0,
 	Farm,
 	Forge,
-	//LumberHut,
+	LumberHut,
 	Mine,
 	Port,
-	//Sawmill,
+	Sawmill,
 	Windmill
 };
 

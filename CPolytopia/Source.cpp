@@ -6,7 +6,7 @@
 
 int main(int argc, char ** argv) {
 	srand((unsigned int)time(NULL));
-	Player p;
+	Player p(20);
 	Renderer::Init();
 	Map carte(20);
 	carte.getTileAt(1, 1) ->setUnit(Unit(&p, UnitID::Warrior));
@@ -21,7 +21,6 @@ int main(int argc, char ** argv) {
 	carte.getTileAt(1, 10)->setUnit(Unit(&p, UnitID::Swordsman));
 
 	carte.setRandomMap();
-	Renderer::renderMap(carte);
 	std::set<std::tuple<int, int>> cases;
 	cases.insert({ 0,0 });
 	cases.insert({ 1,1 });
@@ -33,8 +32,8 @@ int main(int argc, char ** argv) {
 	cases.insert({ 4,3 });
 	cases.insert({ 2,3 });
 	cases.insert({ 3,2 });
-	SDL_SetRenderDrawColor(Renderer::renderer, 0, 255, 180, 200);
-	Renderer::draw_contour(cases);
+	SDL_SetRenderDrawColor(Renderer::renderer, 230, 120 , 0, 200);
+	Renderer::renderMap(carte, p, cases);
 	Renderer::update();
 
 	bool on_hold = false;
@@ -49,6 +48,18 @@ int main(int argc, char ** argv) {
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
 					on_hold = true;
+					/*int mouseX, mouseY;
+					SDL_GetMouseState(&mouseX, &mouseY);
+					Vec2 clicked = Renderer::cartesian_to_map(mouseX, mouseY);
+					if (cases.contains(clicked)) {
+						cases.erase(clicked); 
+					}
+					else {
+						cases.insert(clicked);
+					}
+					Renderer::clear();
+					Renderer::renderMap(carte, cases);
+					Renderer::update(); */
 				}
 				break;
 			case SDL_MOUSEBUTTONUP:
@@ -60,10 +71,8 @@ int main(int argc, char ** argv) {
 				if (on_hold) {
 					Renderer::move(event.motion.xrel, event.motion.yrel);
 					Renderer::clear();
-					Renderer::renderMap(carte);
-					Renderer::draw_contour(cases);
+					Renderer::renderMap(carte, p, cases);
 					Renderer::update();
-
 				}
 				break;
 			case SDL_MOUSEWHEEL:
@@ -77,8 +86,7 @@ int main(int argc, char ** argv) {
 
 				}
 				Renderer::clear();
-				Renderer::renderMap(carte);
-				Renderer::draw_contour(cases);
+				Renderer::renderMap(carte, p, cases);
 				Renderer::update();
 
 				break;
@@ -86,17 +94,17 @@ int main(int argc, char ** argv) {
 				if(event.key.keysym.sym == SDLK_r){
 					carte.setRandomMap();
 				}else if (event.key.keysym.sym == SDLK_UP) {
-					Renderer::tile_size = Renderer::tile_size - unit_y;
+					Renderer::cloud_shift = Renderer::cloud_shift - unit_y;
 				}else if (event.key.keysym.sym == SDLK_DOWN) {
-					Renderer::tile_size = Renderer::tile_size + unit_y;
+					Renderer::cloud_shift = Renderer::cloud_shift + unit_y;
 				}else if (event.key.keysym.sym == SDLK_LEFT) {
-					Renderer::tile_size = Renderer::tile_size + unit_x;
+					Renderer::cloud_shift = Renderer::cloud_shift - unit_x;
 				}else if (event.key.keysym.sym == SDLK_RIGHT) {
-					Renderer::tile_size = Renderer::tile_size - unit_x;
+					Renderer::cloud_shift = Renderer::cloud_shift + unit_x;
 				}
+				std::cout << Renderer::cloud_shift << std::endl;
 				Renderer::clear();
-				Renderer::renderMap(carte);
-				Renderer::draw_contour(cases);
+				Renderer::renderMap(carte, p, cases);
 				Renderer::update();
 
 				break;

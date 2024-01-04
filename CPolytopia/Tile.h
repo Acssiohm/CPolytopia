@@ -19,8 +19,8 @@ public:
 	ResourceID getResource() const;
 	bool setResource(ResourceID res);
 
-	BuildingID getBuildingID() const;
-	bool setBuildingID(BuildingID build);
+	BuildingID getBuilding() const;
+	bool setBuilding(BuildingID build);
 
 	Unit getUnit() const;
 	bool setUnit(Unit unit);

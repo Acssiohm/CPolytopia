@@ -29,7 +29,7 @@ Vec2<int> Map::delinearise(int a) {
 	return Vec2<int>((int)(a%size), (int)(a/size));
 }
 
-int Map::linearise(int i, int j) {
+int Map::linearise(int i, int j) const {
 	return (int)(i + size * j);
 }
 
@@ -51,6 +51,14 @@ Tile* Map::getTileAt(int i, int j) {
 		return nullptr;
 	}
 	return &map[linearise(i,j)];
+}
+const Tile* Map::getTileAt(int i, int j) const {
+	if (i >= size || i < 0 || j < 0 || j >= size) {
+		std::cerr << "Error , index out of range : ( "
+			<< i << " , " << j << " )  size : " << size << std::endl;
+		return nullptr;
+	}
+	return &map[linearise(i, j)];
 }
 
 size_t Map::getSize() const {

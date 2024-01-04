@@ -17,8 +17,9 @@ public:
 	int prand(int probas[], int n);
 	void setRandomMap();
 	Vec2<int> delinearise(int a);
-	int linearise(int i, int j);
+	int linearise(int i, int j) const ;
 	Tile* getTileAt(int i, int j);
+	const Tile* getTileAt(int i, int j) const;
 	size_t getSize() const;
 private:
 	size_t size;
