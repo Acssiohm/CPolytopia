@@ -4,7 +4,7 @@ Map::Map(int side) : size(side) {}
 
 
 void Map::setRandomTerains() {
-	for (int i = 0; i < size * size; i++) {
+	for (size_t i = 0; i < size * size; i++) {
 		map[i].setTerrain((TerrainID)(1 + rand() % numberOfTerrains));
 	}
 }

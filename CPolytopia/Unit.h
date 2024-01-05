@@ -1,11 +1,11 @@
 #pragma once
-#include "ResourcesIds.h"
-#include "Player.h"
+#include "IDs.h"
+
+class Player;
 
 class Unit{
 public:
-	Unit(Player * owner = nullptr, UnitID id = UnitID::None)
-		:m_owner(owner), m_type(id) {}
+	Unit(Player* owner = nullptr, UnitID id = UnitID::None);
 
 	Player* m_owner;
 	UnitID m_type; 

@@ -1,5 +1,5 @@
 #pragma once
-#include "ResourcesIds.h"
+#include "IDs.h"
 #include "Unit.h"
 
 class Tile {

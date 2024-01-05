@@ -42,7 +42,7 @@ constexpr Vec2<int> unit_y(0, 1);
 
 template <typename T1, typename T2>
 Vec2<T1> operator+ (Vec2<T1> a, Vec2<T2> b) {
-	return Vec2(a.x() + b.x(), a.y() + b.y());
+	return Vec2<T1>(a.x() + b.x(), a.y() + b.y());
 }
 template <typename T1, typename T2>
 Vec2<T1> operator- (Vec2<T1> a, Vec2<T2> b) {
@@ -50,7 +50,7 @@ Vec2<T1> operator- (Vec2<T1> a, Vec2<T2> b) {
 }
 template <typename T>
 Vec2<T> operator* (Vec2<T> a, double s) {
-	return Vec2((T)(a.x() * s), (T)(a.y() * s));
+	return Vec2<T>((T)(a.x() * s), (T)(a.y() * s));
 }
 template <typename T>
 Vec2<T> operator* (double s, Vec2<T> a) {

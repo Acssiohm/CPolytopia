@@ -4,7 +4,7 @@
 #include "SDL2/SDL_image.h"
 #include <string>
 
-#include "ResourcesIds.h"
+#include "IDs.h"
 #include "Vec.h"
 #include <array>
 

@@ -1,6 +1,11 @@
 #include "Tile.h"
 
-Tile::Tile(TerrainID terrain, TerrainAlterationID alteration, ResourceID resource, BuildingID building, Unit unit) :
+Tile::Tile(
+	TerrainID terrain,
+	TerrainAlterationID alteration,
+	ResourceID resource,
+	BuildingID building,
+	Unit unit) :
 	m_terrain(terrain), m_alteration(alteration), m_resource(resource), m_building(building), m_unit(unit) {}
 
 TerrainID Tile::getTerrain() const {

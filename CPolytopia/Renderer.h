@@ -4,7 +4,7 @@
 #include "SDL2/SDL_image.h"
 #include "SDL2/SDL_ttf.h"
 
-#include "ResourcesIds.h"
+#include "IDs.h"
 #include "Unit.h"
 
 #include <string>
@@ -15,6 +15,7 @@
 #include "Image.h"
 #include <set>
 #include <SDL2/SDL_render.h>
+#include "TechTree.h"
 
 namespace Renderer {
 	extern SDL_Window* window;
@@ -49,11 +50,12 @@ namespace Renderer {
 	typedef std::vector<Vec2<float>> Fpath;
 
 	void renderMap(const Map &carte, const Player& p, const std::set<point>& squares_selected = {});
-	void zoom(float zoom_scale, Vec2<int> centre = Vec2(0, 0));
+	void zoom(float zoom_scale, Vec2<int> centre = Vec2<int>(0, 0));
 	void move(int x, int y);
 	void find_contour(const std::set<point>& squares, path& out_bords_coin, path& out_cases_coin);
 	void convert_coins_to_bord_limits(const path& bords_coin, const path& cases_coin, Fpath& limit_ext, Fpath& limit_int, float bord_width_ratio);
 	std::vector<SDL_FPoint> generate_triangles_thick_paths(const Fpath& path_side1, const Fpath& path_side2);
 	void draw_triangles(const std::vector<SDL_FPoint>& triangles);
 	void draw_contour(const std::set<point>& squares, float ratio = .2f);
+	void drawTechTree(const TechTree* ttree, Vec2<double> pos);
 }

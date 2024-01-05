@@ -1,4 +1,4 @@
-#include "ResourcesIds.h"
+#include "IDs.h"
 
 std::vector<TerrainAlterationID> possibleAlterations(TerrainID ter) {
 	if (ter == TerrainID::Field) {

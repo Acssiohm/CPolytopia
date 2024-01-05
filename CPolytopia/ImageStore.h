@@ -2,7 +2,7 @@
 
 #include "SDL2/SDL.h"
 #include <string>
-#include "ResourcesIds.h"
+#include "IDs.h"
 #include <array>
 
 #include "Image.h"

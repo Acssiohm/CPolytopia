@@ -7,11 +7,12 @@
 #include <stdlib.h>
 #include <time.h> 
 #include <map>
-#include "ResourcesIds.h"
+#include "IDs.h"
 #include "Vec.h"
 
 class Map {
 public:
+	Map() :Map(0) {};
 	Map(int side);
 	void setRandomTerains();
 	int prand(int probas[], int n);

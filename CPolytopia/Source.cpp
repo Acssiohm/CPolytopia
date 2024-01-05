@@ -2,14 +2,19 @@
 #include "SDL2/SDL.h"
 
 #include <set>
-	
+#include "Player.h"	
 
 int main(int argc, char ** argv) {
 	srand((unsigned int)time(NULL));
-	Player p(20);
 	Renderer::Init();
 	Map carte(20);
-	carte.getTileAt(1, 1) ->setUnit(Unit(&p, UnitID::Warrior));
+	Player p(carte);
+	for (int i = 0; i < 20; i++){
+		for (int j = 0; j < 20; j++) {
+			p.discover(i, j);
+		}
+	}
+	carte.getTileAt(1, 1)->setUnit(Unit(&p, UnitID::Warrior));
 	carte.getTileAt(1, 2)->setUnit(Unit(&p, UnitID::Archer));
 	carte.getTileAt(1, 3)->setUnit(Unit(&p, UnitID::Catapult));
 	carte.getTileAt(1, 4)->setUnit(Unit(&p, UnitID::Cloak));
@@ -79,10 +84,10 @@ int main(int argc, char ** argv) {
 				int mouseX, mouseY;
 				SDL_GetMouseState(&mouseX, &mouseY);
 				if (event.wheel.y > 0) {
-					Renderer::zoom(1.2f, Vec2(mouseX, mouseY));
+					Renderer::zoom(1.2f, Vec2<int>(mouseX, mouseY));
 				}
 				else if (event.wheel.y < 0) {
-					Renderer::zoom(1/1.2f, Vec2(mouseX, mouseY));
+					Renderer::zoom(1/1.2f, Vec2<int>(mouseX, mouseY));
 
 				}
 				Renderer::clear();
@@ -95,14 +100,17 @@ int main(int argc, char ** argv) {
 					carte.setRandomMap();
 				}else if (event.key.keysym.sym == SDLK_UP) {
 					Renderer::cloud_shift = Renderer::cloud_shift - unit_y;
+					std::cout << Renderer::cloud_shift << std::endl;
 				}else if (event.key.keysym.sym == SDLK_DOWN) {
 					Renderer::cloud_shift = Renderer::cloud_shift + unit_y;
+					std::cout << Renderer::cloud_shift << std::endl;
 				}else if (event.key.keysym.sym == SDLK_LEFT) {
 					Renderer::cloud_shift = Renderer::cloud_shift - unit_x;
+					std::cout << Renderer::cloud_shift << std::endl;
 				}else if (event.key.keysym.sym == SDLK_RIGHT) {
 					Renderer::cloud_shift = Renderer::cloud_shift + unit_x;
+					std::cout << Renderer::cloud_shift << std::endl;
 				}
-				std::cout << Renderer::cloud_shift << std::endl;
 				Renderer::clear();
 				Renderer::renderMap(carte, p, cases);
 				Renderer::update();

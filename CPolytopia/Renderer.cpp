@@ -2,8 +2,9 @@
 #include <set>
 #include <unordered_map>
 #include <cassert>
-
 #include "Player.h"
+#include <SDL2/SDL2_gfxPrimitives.h>
+#include "TechTree.h"
 
 namespace Renderer {
 	constexpr int DEFAULT_WIN_WIDTH = 900;
@@ -133,33 +134,51 @@ namespace Renderer {
 		);
 	}
 	void renderMap(const Map& carte, const Player& p, const std::set<point>& squares_selected) {
-		for (int i = 0; i < carte.getSize(); i++) {
-			for (int j = 0; j < carte.getSize(); j++){
-				//if (cannot_be_visible(i, j)) {continue;}
-				if (!p.discovered[carte.linearise(i,j)]) {
-					renderCloud(i, j);
-					continue;
-				}
-				const Tile* tile = carte.getTileAt(i, j);
-				render(tile ->getTerrain(), i, j);
-				render(tile->getAlteration(), i, j);
-				if (tile->getBuilding() == BuildingID::None) {
-					render(tile->getResource(), i, j);
-				}
-				else {
-					render(tile->getBuilding(), i, j);
-				}
-			}
-		}
-		draw_contour(squares_selected);
-		for (int i = 0; i < carte.getSize(); i++) {
-			for (int j = 0; j < carte.getSize(); j++) {
-				//if (cannot_be_visible(i, j)) {continue;}
-				const Tile* tile = carte.getTileAt(i, j);
-				render(tile->getUnit().m_type, i, j);
-			}
-		}
-		
+		//for (int i = 0; i < carte.getSize(); i++) {
+		//	for (int j = 0; j < carte.getSize(); j++){
+		//		//if (cannot_be_visible(i, j)) {continue;}
+		//		if (!p.isDiscovered(i,j) ) {
+		//			renderCloud(i, j);
+		//			continue;
+		//		}
+		//		const Tile* tile = carte.getTileAt(i, j);
+		//		render(tile ->getTerrain(), i, j);
+		//		render(tile->getAlteration(), i, j);
+		//		if (tile->getBuilding() == BuildingID::None) {
+		//			render(tile->getResource(), i, j);
+		//		}
+		//		else {
+		//			render(tile->getBuilding(), i, j);
+		//		}
+		//	}
+		//}
+		//draw_contour(squares_selected);
+		//for (int i = 0; i < carte.getSize(); i++) {
+		//	for (int j = 0; j < carte.getSize(); j++) {
+		//		//if (cannot_be_visible(i, j)) {continue;}
+		//		const Tile* tile = carte.getTileAt(i, j);
+		//		render(tile->getUnit().m_type, i, j);
+		//	}
+		//}
+		TechTree ttree;
+		auto* pt = ttree.getTree();
+		auto c1 = pt->addChild("");
+		c1->addChild("")->addChild("");
+		c1->addChild("")->addChild("");
+		auto c2 = pt->addChild("");
+		c2->addChild("")->addChild("");
+		c2->addChild("")->addChild("");
+		auto c3 = pt->addChild("");
+		c3->addChild("")->addChild("");
+		c3->addChild("")->addChild("");
+		auto c4 = pt->addChild("");
+		c4->addChild("")->addChild("");
+		c4->addChild("")->addChild("");
+		auto c5 = pt->addChild("");
+		c5->addChild("")->addChild("");
+		c5->addChild("")->addChild("");
+
+		drawTechTree(&ttree, Vec2(400, 300 ));
 	}
 	void move(int x, int y) {
 		shift = shift + Vec2<double>(x, y);
@@ -184,12 +203,46 @@ namespace Renderer {
 	void drawText(const std::string& text, Vec2<int> pos, SDL_Color color) {
 		drawCharChain(text.c_str(), pos.x(), pos.y(), color);
 	}
-
 	Vec2<int> rotation(Vec2<int> v, bool horaire) {
 		int r = (horaire ? 1 : -1);
 		return { -r* v.y() ,  r * v.x()};
 	}
-
+	void drawTechNode(const TechTree::TechNode * node, double min_angle, double max_angle, bool horaire, Vec2<double> pos) {
+		const double rod_length = 70;
+		const int rad = 25;
+		double init_angle = (horaire ? max_angle : min_angle);
+		int n = node->nbChildren();
+		assert(max_angle > min_angle);
+		double step_angle =  (max_angle - min_angle)/( std::max(n-1., 1/2.));
+		step_angle = (horaire ? -step_angle : step_angle);
+		for (size_t i = 0; i < n; i++){
+			double a = init_angle + i * step_angle;
+			double next_min = std::max(min_angle, a - abs(step_angle) / 2);
+			double next_max = std::min(max_angle, a + abs(step_angle) / 2);
+			Vec2 next_pos = pos + Vec2(std::cos(a), std::sin(a)) * rod_length ;
+			SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+			drawTechNode(node->getChildren()[i],
+				next_min,
+				next_max,
+				a > (max_angle + min_angle)/2,
+				next_pos );
+		}
+		filledCircleRGBA(renderer, pos.x(), pos.y(), rad, 255, 0, 0, 255);
+	}
+	void drawTechTree(const TechTree * ttree, Vec2<double> pos) {
+		const double rod_length = 70;
+		//const int rad = 30;
+		//filledCircleRGBA(renderer, pos.x(), pos.y(), rad, 255, 0, 0, 255);
+		double step_angle = 2 * M_PI / ttree->nbBranches();
+		for (size_t i = 0; i < ttree->nbBranches(); i++) {
+			double a = i * step_angle ;
+			drawTechNode(ttree->getBranch(i),
+				(i - 1/2.)*step_angle,
+				(i + 1/2.)*step_angle,
+				true,
+				pos + Vec2(std::cos(a), std::sin(a)) * rod_length); 
+		}
+	}
 	void find_contour(const std::set<point>& squares, path& out_bords_coin, path& out_cases_coin){
 		const int directions_x[4] = {1,-1, 0, 0};
 		const int directions_y[4] = {0, 0, 1, -1};
@@ -207,8 +260,8 @@ namespace Renderer {
 				// x : i + (1 + x - y)/2
 				// y : j + (1 + y + x)/2
 
-				Vec2 c1(i + (1 + x - y) / 2, j + (1 + y - x) / 2);
-				Vec2 c2(i + (1 + x + y) / 2, j + (1 + y + x) / 2);
+				Vec2<int> c1(i + (1 + x - y) / 2, j + (1 + y - x) / 2);
+				Vec2<int> c2(i + (1 + x + y) / 2, j + (1 + y + x) / 2);
 				/*Vec2 c1(i + (1 + x + y) / 2, j + (1 + y - x) / 2);
 				Vec2 c2(i + (1 + x - y) / 2, j + (1 + y + x) / 2);
 				*/
