@@ -27,20 +27,20 @@ int main(int argc, char ** argv) {
 
 	carte.setRandomMap();
 	std::set<std::tuple<int, int>> cases;
-	cases.insert({ 0,0 });
-	cases.insert({ 1,1 });
-	cases.insert({ 1,2 });
-	cases.insert({ 1,3 });
-	cases.insert({ 2,1 });
-	cases.insert({ 3,1 });
-	cases.insert({ 3,3 });
-	cases.insert({ 4,3 });
-	cases.insert({ 2,3 });
-	cases.insert({ 3,2 });
+	cases.insert({ 0, 0 });
+	cases.insert({ 1, 1 });
+	cases.insert({ 1, 2 });
+	cases.insert({ 1, 3 });
+	cases.insert({ 2, 1 });
+	cases.insert({ 3, 1 });
+	cases.insert({ 3, 3 });
+	cases.insert({ 4, 3 });
+	cases.insert({ 2, 3 });
+	cases.insert({ 3, 2 });
 	SDL_SetRenderDrawColor(Renderer::renderer, 230, 120 , 0, 200);
-	Renderer::renderMap(carte, p, cases);
+	bool is_map_visible = true;
+	Renderer::renderAll(carte, p, cases, is_map_visible);
 	Renderer::update();
-
 	bool on_hold = false;
 	SDL_bool run = SDL_TRUE;
 	while (run) {
@@ -53,18 +53,17 @@ int main(int argc, char ** argv) {
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
 					on_hold = true;
-					/*int mouseX, mouseY;
+					int mouseX, mouseY;
 					SDL_GetMouseState(&mouseX, &mouseY);
 					Vec2 clicked = Renderer::cartesian_to_map(mouseX, mouseY);
 					if (cases.contains(clicked)) {
 						cases.erase(clicked); 
-					}
-					else {
+					} else {
 						cases.insert(clicked);
 					}
 					Renderer::clear();
-					Renderer::renderMap(carte, cases);
-					Renderer::update(); */
+					Renderer::renderAll(carte, p , cases, is_map_visible);
+					Renderer::update(); 
 				}
 				break;
 			case SDL_MOUSEBUTTONUP:
@@ -76,7 +75,7 @@ int main(int argc, char ** argv) {
 				if (on_hold) {
 					Renderer::move(event.motion.xrel, event.motion.yrel);
 					Renderer::clear();
-					Renderer::renderMap(carte, p, cases);
+					Renderer::renderAll(carte, p, cases, is_map_visible);
 					Renderer::update();
 				}
 				break;
@@ -91,7 +90,7 @@ int main(int argc, char ** argv) {
 
 				}
 				Renderer::clear();
-				Renderer::renderMap(carte, p, cases);
+				Renderer::renderAll(carte, p, cases, is_map_visible);
 				Renderer::update();
 
 				break;
@@ -110,9 +109,11 @@ int main(int argc, char ** argv) {
 				}else if (event.key.keysym.sym == SDLK_RIGHT) {
 					Renderer::cloud_shift = Renderer::cloud_shift + unit_x;
 					std::cout << Renderer::cloud_shift << std::endl;
+				}else if (event.key.keysym.sym == SDLK_m){
+					is_map_visible = !is_map_visible;
 				}
 				Renderer::clear();
-				Renderer::renderMap(carte, p, cases);
+				Renderer::renderAll(carte, p, cases, is_map_visible);
 				Renderer::update();
 
 				break;
@@ -121,6 +122,7 @@ int main(int argc, char ** argv) {
 					int win_width;
 					int win_height;
 					SDL_GetWindowSize(Renderer::window, &win_width, &win_height);
+					SDL_SetWindowSize(Renderer::window, win_width, win_height);
 				}
 				break;
 			default:

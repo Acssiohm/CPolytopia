@@ -2,6 +2,7 @@
 #include "IDs.h"
 #include "Unit.h"
 
+// Stores the informtions about a what does contain a 
 class Tile {
 public:
 	Tile(

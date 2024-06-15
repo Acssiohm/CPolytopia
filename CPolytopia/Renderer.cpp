@@ -9,13 +9,13 @@
 namespace Renderer {
 	constexpr int DEFAULT_WIN_WIDTH = 900;
 	constexpr int DEFAULT_WIN_HEIGHT = 600;
-	constexpr int DEFAULT_FONT_SIZE = 20;
+	constexpr int DEFAULT_FONT_SIZE = 10;
 
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	ImageStore* images;
 	Image* cloud_image;
-	const static std::string font_file = "Resources/LargeFont.ttf";
+	const static std::string font_file = "Fonts/Swansea.ttf";
 	static TTF_Font* font;
 
 	Vec2<double> shift;
@@ -27,7 +27,8 @@ namespace Renderer {
 	float zoom_factor = 0.2f;
 	Vec2<int> position(DEFAULT_WIN_WIDTH / 2 - (int)(zoom_factor*tile_size.x() / 2), 15);
 
-	static void loadImages (){
+	 
+	void loadImages (){
 		images = new ImageStore( renderer ,"./images/");
 		
 		images->add_image("Grass.png"		, TerrainID::Field);
@@ -65,20 +66,12 @@ namespace Renderer {
 
 		cloud_image = new Image(renderer, "./images/Clouds.png");
 	}
-
 	void loadFont(int font_size) {
 		font = TTF_OpenFont(font_file.c_str(), font_size);
 	}
-	void unloadImages() {
-		delete images;
-		delete cloud_image;
-	}
-	void unloadFont() {
-		TTF_CloseFont(font);
-	}
 	void Init() {
 		SDL_Init(SDL_INIT_VIDEO);
-		SDL_CreateWindowAndRenderer(DEFAULT_WIN_WIDTH, DEFAULT_WIN_HEIGHT, 0, &window, &renderer);
+		SDL_CreateWindowAndRenderer(DEFAULT_WIN_WIDTH, DEFAULT_WIN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE, &window, &renderer);
 		TTF_Init();
 		IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -88,7 +81,26 @@ namespace Renderer {
 
 		SDL_RenderPresent(renderer);
 	}
+	
+	
+	void unloadImages() {
+		delete images;
+		delete cloud_image;
+	}
+	void unloadFont() {
+		TTF_CloseFont(font);
+	}
+	void Quit() {
+		unloadImages();
+		unloadFont();
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+		TTF_Quit();
+		SDL_Quit();
+		IMG_Quit();
+	}
 
+	
 	void update() {
 		SDL_RenderPresent(renderer);
 	}
@@ -100,6 +112,19 @@ namespace Renderer {
 		SDL_SetRenderDrawColor(renderer, r, g, b, a);
 	}
 
+	
+	void zoom(float zoom_scale, Vec2<int> centre) {
+		float zoom_factor_preview = zoom_factor * zoom_scale;
+		if (zoom_factor_preview >= 0.01) {
+			shift = shift + (Vec2<float>(centre- position) - shift) * (1 - zoom_scale);
+			zoom_factor = zoom_factor_preview;
+		}
+	}
+	void move(int x, int y) {
+		shift = shift + Vec2<double>(x, y);
+	}
+	
+	
 	Vec2<int> map_to_cartesian(int i, int j) {
 		return position + (Vec2<int>(j, j) + Vec2<int>(-i, i)) * tile_size * (zoom_factor/2) + Vec2<int>(shift);
 	}
@@ -115,6 +140,8 @@ namespace Renderer {
 	Vec2<int> cartesian_to_map(Vec2<int> pos) {
 		return cartesian_to_map(pos.x(), pos.y());
 	}
+	
+	
 	bool cannot_be_visible(int i , int j) {
 		Vec2<int> coord = map_to_cartesian(i, j);
 		int x = coord.x();
@@ -133,85 +160,87 @@ namespace Renderer {
 			zoom_factor
 		);
 	}
-	void renderMap(const Map& carte, const Player& p, const std::set<point>& squares_selected) {
-		//for (int i = 0; i < carte.getSize(); i++) {
-		//	for (int j = 0; j < carte.getSize(); j++){
-		//		//if (cannot_be_visible(i, j)) {continue;}
-		//		if (!p.isDiscovered(i,j) ) {
-		//			renderCloud(i, j);
-		//			continue;
-		//		}
-		//		const Tile* tile = carte.getTileAt(i, j);
-		//		render(tile ->getTerrain(), i, j);
-		//		render(tile->getAlteration(), i, j);
-		//		if (tile->getBuilding() == BuildingID::None) {
-		//			render(tile->getResource(), i, j);
-		//		}
-		//		else {
-		//			render(tile->getBuilding(), i, j);
-		//		}
-		//	}
-		//}
-		//draw_contour(squares_selected);
-		//for (int i = 0; i < carte.getSize(); i++) {
-		//	for (int j = 0; j < carte.getSize(); j++) {
-		//		//if (cannot_be_visible(i, j)) {continue;}
-		//		const Tile* tile = carte.getTileAt(i, j);
-		//		render(tile->getUnit().m_type, i, j);
-		//	}
-		//}
-		TechTree ttree;
-		auto* pt = ttree.getTree();
-		auto c1 = pt->addChild("");
-		c1->addChild("")->addChild("");
-		c1->addChild("")->addChild("");
-		auto c2 = pt->addChild("");
-		c2->addChild("")->addChild("");
-		c2->addChild("")->addChild("");
-		auto c3 = pt->addChild("");
-		c3->addChild("")->addChild("");
-		c3->addChild("")->addChild("");
-		auto c4 = pt->addChild("");
-		c4->addChild("")->addChild("");
-		c4->addChild("")->addChild("");
-		auto c5 = pt->addChild("");
-		c5->addChild("")->addChild("");
-		c5->addChild("")->addChild("");
-
-		drawTechTree(&ttree, Vec2(400, 300 ));
-	}
-	void move(int x, int y) {
-		shift = shift + Vec2<double>(x, y);
-	}
-	void zoom(float zoom_scale, Vec2<int> centre) {
-		float zoom_factor_preview = zoom_factor * zoom_scale;
-		if (zoom_factor_preview >= 0.01) {
-			shift = shift + (Vec2<float>(centre- position) - shift) * (1 - zoom_scale);
-			zoom_factor = zoom_factor_preview;
+	void renderUnits(const Map& carte) {
+		for (int i = 0; i < carte.getSize(); i++) {
+			for (int j = 0; j < carte.getSize(); j++) {
+				//if (cannot_be_visible(i, j)) {continue;}
+				const Tile* tile = carte.getTileAt(i, j);
+				render(tile->getUnit().m_type, i, j);
+			}
 		}
 	}
-	void drawCharChain(const char* text, int x, int y, SDL_Color color) {
-		SDL_Surface* text_surface = TTF_RenderText_Solid(font, text, color);
-		SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
-		SDL_Rect text_rect{};
-		SDL_QueryTexture(text_texture, nullptr, nullptr, &text_rect.w, &text_rect.h);
-		text_rect.x = x;
-		text_rect.y = y;
-		SDL_RenderCopy(renderer, text_texture, nullptr, &text_rect);
-		SDL_FreeSurface(text_surface);
+	void renderAll(const Map& carte, const Player& p, const std::set<point>& squares_selected, bool map_vs_ttree) {
+		if (!map_vs_ttree) {
+			renderTestTree();
+			return;
+		}
+		renderMap(carte, p);
+		draw_contour(squares_selected);
+		renderUnits(carte);
+
+		int h = 90;
+		SDL_SetRenderDrawColor(renderer, 0, 0, 40, 255);
+		draw_rectangle(Vec2(0, DEFAULT_WIN_HEIGHT - h), DEFAULT_WIN_WIDTH, h);
 	}
-	void drawText(const std::string& text, Vec2<int> pos, SDL_Color color) {
-		drawCharChain(text.c_str(), pos.x(), pos.y(), color);
+	void renderMap(const Map& carte, const Player& p) {
+		for (int i = 0; i < carte.getSize(); i++) {
+			for (int j = 0; j < carte.getSize(); j++){
+				//if (cannot_be_visible(i, j)) {continue;}
+				if (!p.isDiscovered(i,j) ) {
+					renderCloud(i, j);
+					continue;
+				}
+				const Tile* tile = carte.getTileAt(i, j);
+				render(tile ->getTerrain(), i, j);
+				render(tile->getAlteration(), i, j);
+				if (tile->getBuilding() == BuildingID::None) {
+					render(tile->getResource(), i, j);
+				}
+				else {
+					render(tile->getBuilding(), i, j);
+				}
+			}
+		}
 	}
-	Vec2<int> rotation(Vec2<int> v, bool horaire) {
-		int r = (horaire ? 1 : -1);
-		return { -r* v.y() ,  r * v.x()};
+	
+
+	void renderTestTree() {
+		TechTree ttree = generateTestTechTree();
+		drawTechTree(&ttree, Vec2(400, 300));
 	}
+	TechTree generateTestTechTree() {
+		TechTree ttree;
+		auto* pt = &ttree.m_parentNode;
+
+		auto c2 = pt->addChild("Organization");
+		c2->addChild("Farming")->addChild("Construction");
+		c2->addChild("Strategy")->addChild("Diplomacy");
+
+		auto c3 = pt->addChild("Climbing");
+		c3->addChild("Mining")->addChild("Smithery");
+		c3->addChild("Meditation")->addChild("Philosophy");
+
+		auto c4 = pt->addChild("Sailing");
+		c4->addChild("Fishing")->addChild("Navigation");
+		c4->addChild("Aquaculture")->addChild("Aquation");
+
+		auto c5 = pt->addChild("Hunting");
+		c5->addChild("Archery")->addChild("Spiritualism");
+		c5->addChild("Forestry")->addChild("Mathematics");
+
+		auto c1 = pt->addChild("Riding");
+		c1->addChild("Roads")->addChild("Trade");
+		c1->addChild("Free Spirit")->addChild("Chivalry");
+
+		return ttree;
+		//drawTechTree(&ttree, Vec2(400, 300 ));
+	}
+	// Draws tech node and his children recursively in a star shape as evenly spaced as possible
 	void drawTechNode(const TechTree::TechNode * node, double min_angle, double max_angle, bool horaire, Vec2<double> pos) {
-		const double rod_length = 70;
-		const int rad = 25;
+		const double rod_length = 100;
+		const int rad = 35;
 		double init_angle = (horaire ? max_angle : min_angle);
-		int n = node->nbChildren();
+		int n = node->m_children.size();
 		assert(max_angle > min_angle);
 		double step_angle =  (max_angle - min_angle)/( std::max(n-1., 1/2.));
 		step_angle = (horaire ? -step_angle : step_angle);
@@ -221,29 +250,93 @@ namespace Renderer {
 			double next_max = std::min(max_angle, a + abs(step_angle) / 2);
 			Vec2 next_pos = pos + Vec2(std::cos(a), std::sin(a)) * rod_length ;
 			SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-			drawTechNode(node->getChildren()[i],
+			drawTechNode(node->m_children[i],
 				next_min,
 				next_max,
 				a > (max_angle + min_angle)/2,
 				next_pos );
 		}
 		filledCircleRGBA(renderer, pos.x(), pos.y(), rad, 255, 0, 0, 255);
+		drawText(node->m_name, pos - Vec2(0, 5), {255, 255, 255, 255}, TextHPos::Center, TextVPos::Center);
 	}
+	// Draws tech tree in a star shape as evenly spaced as possible
 	void drawTechTree(const TechTree * ttree, Vec2<double> pos) {
-		const double rod_length = 70;
+		const double rod_length = 100;
 		//const int rad = 30;
 		//filledCircleRGBA(renderer, pos.x(), pos.y(), rad, 255, 0, 0, 255);
-		double step_angle = 2 * M_PI / ttree->nbBranches();
-		for (size_t i = 0; i < ttree->nbBranches(); i++) {
+		const TechTree::TechNode & const parent = ttree->m_parentNode;
+		const int nb_childs = parent.m_children.size();
+		double step_angle = 2 * M_PI / nb_childs;
+		for (size_t i = 0; i < nb_childs; i++) {
 			double a = i * step_angle ;
-			drawTechNode(ttree->getBranch(i),
+			drawTechNode(parent.m_children[i],
 				(i - 1/2.)*step_angle,
 				(i + 1/2.)*step_angle,
 				true,
 				pos + Vec2(std::cos(a), std::sin(a)) * rod_length); 
 		}
 	}
-	void find_contour(const std::set<point>& squares, path& out_bords_coin, path& out_cases_coin){
+
+
+	enum class TextHPos {
+		Left = 0,
+		Center = 1,
+		Right = 2
+	};
+	enum class TextVPos {
+		Top = 0,
+		Center = 1,
+		Bottom = 2
+	};
+	void drawCharChain(const char* text, int x, int y, SDL_Color color, TextHPos hp, TextVPos vp) {
+		SDL_Surface* text_surface = TTF_RenderText_Solid(font, text, color);
+		SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
+		SDL_Rect text_rect{};
+		SDL_QueryTexture(text_texture, nullptr, nullptr, &text_rect.w, &text_rect.h);
+		text_rect.x = x - ((int)vp*text_rect.w)/2;
+		text_rect.y = y - ((int)hp * text_rect.h) / 2;
+		SDL_RenderCopy(renderer, text_texture, nullptr, &text_rect);
+		SDL_FreeSurface(text_surface);
+	}
+	void drawText(const std::string& text, Vec2<int> pos, SDL_Color color, TextHPos hp, TextVPos vp) {
+		drawCharChain(text.c_str(), pos.x(), pos.y(), color, hp, vp);
+	}
+	
+	
+	void border_list::verify_sizes() const {
+		assert(intersections.size() == centers.size());
+	}
+	int border_list::size() const {
+		verify_sizes();
+		return intersections.size();
+	}
+	
+	
+	void draw_triangles(const std::vector<SDL_FPoint>& triangles) { 
+		Uint8 r, g, b, a;
+		SDL_GetRenderDrawColor(renderer, &r, &g, &b, &a); 
+		SDL_Color color = { r, g, b, a };
+		std::vector<SDL_Vertex> res;
+		res.reserve(triangles.size());
+		for (SDL_FPoint pos : triangles) {
+			res.push_back({pos, color, {0., 0.}});
+		}
+		SDL_RenderGeometry(renderer, NULL, res.data(), (int)res.size(), NULL, 0);
+	}
+	void draw_rectangle(Vec2<int> pos, int w, int h) {
+		std::vector<SDL_FPoint> triangles = {
+			to_FPoint(pos), to_FPoint(pos + Vec2(w, 0)), to_FPoint(pos + Vec2(0, h)) ,
+			to_FPoint(pos + Vec2(w, h)), to_FPoint(pos + Vec2(w, 0)), to_FPoint(pos + Vec2(0, h)) 
+		};
+		draw_triangles(triangles);
+	}
+	
+
+	Vec2<int> rotation(Vec2<int> v, bool horaire) {
+		int r = (horaire ? 1 : -1);
+		return { -r* v.y() ,  r * v.x()};
+	}
+	void find_contour(const std::set<point>& squares, border_list& out_borders){
 		const int directions_x[4] = {1,-1, 0, 0};
 		const int directions_y[4] = {0, 0, 1, -1};
 		std::set<segment> segments_vu; 
@@ -273,16 +366,15 @@ namespace Renderer {
 					std::tie(c1, c2) = { c2, c1 }; // echange pour que la case soit à droite du vecteur c1 -> c2
 				}
 				bool square_is_left = false;
-				assert(out_bords_coin.size() == out_cases_coin.size());
-				size_t pos_first = out_bords_coin.size();
-				out_cases_coin.emplace_back(0,0); // on garde la place pour ne pas avoir à insérer
-				out_bords_coin.push_back(c1);
-				out_bords_coin.push_back(c2);
-				Vec2<int> curr = out_bords_coin.back();
+				size_t pos_first = out_borders.size();
+				out_borders.centers.emplace_back(0,0); // on garde la place pour ne pas avoir à insérer
+				out_borders.intersections.push_back(c1);
+				out_borders.intersections.push_back(c2);
+				Vec2<int> curr = out_borders.intersections.back();
 				Vec2<int> init_dir = c2 - c1;
 				Vec2 curr_dir = init_dir;
 				int side = (square_is_left ? -1 : 1);
-				while( curr != c1) {
+				while( true ) {
 					// Rotation horaire ssi side = 1 ssi la case est à droite , car on veut commencer par la direction plus proche de la case
 					Vec2 new_dir = rotation(curr_dir, !square_is_left);
 					Vec2 double_vect_to_center = curr_dir + new_dir;
@@ -294,54 +386,57 @@ namespace Renderer {
 						new_dir = rotation(new_dir, square_is_left);
 						double_vect_to_center = rotation(double_vect_to_center , square_is_left);
 					}
+					if (curr == c1 && init_dir == new_dir) {
+						break;
+					}
 					if (curr_dir == new_dir) {
 						assert(d == 1);
-						out_bords_coin.pop_back();
+						out_borders.intersections.pop_back();
 					}
 					else {
 						assert(d == 0 || d == 2);
 						int convexite = (d == 0 ? 1 : -1 );
 						Vec2 case_cool = curr + ( (new_dir - curr_dir)*convexite - Vec2(1,1))*(1./2);
-						out_cases_coin.push_back(case_cool);
+						out_borders.centers.push_back(case_cool);
+
 					}
-					out_bords_coin.emplace_back(curr + new_dir);
-					segments_vu.insert({curr, out_bords_coin.back()});
-					curr = out_bords_coin.back();
+					out_borders.intersections.emplace_back(curr + new_dir);
+					segments_vu.insert({curr, out_borders.intersections.back()});
+					curr = out_borders.intersections.back();
 					curr_dir = new_dir;
 				}
 				if (curr_dir == init_dir) {
-					out_bords_coin.erase(out_bords_coin.begin() + pos_first);
-					out_bords_coin.back() = out_bords_coin[pos_first];
-					out_cases_coin.erase(out_cases_coin.begin() + pos_first);
-					out_cases_coin.emplace_back(out_cases_coin[pos_first]);
+					out_borders.intersections.erase(out_borders.intersections.begin() + pos_first);
+					out_borders.intersections.back() = out_borders.intersections[pos_first];
+					out_borders.centers.erase(out_borders.centers.begin() + pos_first);
+					out_borders.centers.emplace_back(out_borders.centers[pos_first]);
 				}
 				else {
 					Vec2 case_cool = curr + ((init_dir - curr_dir) - Vec2(1, 1)) * (1. / 2);
 					if (case_cool != Vec2(i,j) ) {
 						case_cool = curr + ((init_dir - curr_dir)*(-1) - Vec2(1, 1)) * (1. / 2);
 					}
-					out_cases_coin.emplace_back(case_cool);
-					out_cases_coin[pos_first] = out_cases_coin.back();
+					out_borders.centers.emplace_back(case_cool);
+					out_borders.centers[pos_first] = out_borders.centers.back();
 				}
 			}
 		}
+		out_borders.verify_sizes();
 	}
-	void convert_coins_to_bord_limits(const path& bords_coin, const path& cases_coin, Fpath& limit_ext, Fpath& limit_int , float bord_width_ratio) {
-		assert(bords_coin.size() == cases_coin.size());
-		
+	void convert_coins_to_bord_limits(const border_list& borders, Fpath& limit_ext, Fpath& limit_int , float bord_width_ratio) {
+		const int n = borders.size();
 		const Vec2<float> centre(421.f * zoom_factor, 461.f * zoom_factor);
 		const Vec2<float> top_to_center(0, zoom_factor * tile_size.y() / 2.f);
 		const Vec2<float> coin_haut = centre - top_to_center;
 
-		limit_ext.reserve(bords_coin.size());
-		limit_int.reserve(cases_coin.size());
-		for (int i = 0; i < cases_coin.size(); i++) {
-			limit_ext.push_back( coin_haut + map_to_cartesian(bords_coin[i]) );
-			Vec2<float> c = coin_haut + top_to_center + map_to_cartesian(cases_coin[i]);
+		limit_ext.reserve(n);
+		limit_int.reserve(n);
+		for (int i = 0; i < n; i++) {
+			limit_ext.push_back( coin_haut + map_to_cartesian(borders.intersections[i]) );
+			Vec2<float> c = coin_haut + top_to_center + map_to_cartesian(borders.centers[i]);
 			limit_int.push_back( (c * bord_width_ratio + limit_ext[i] * (1 - bord_width_ratio)) );
 		}
 	}
-
 	SDL_FPoint to_FPoint(Vec2<float> v) {
 		return { v.x(), v.y() };
 	}
@@ -350,7 +445,7 @@ namespace Renderer {
 		std::vector<SDL_FPoint> triangles; 
 		size_t i_gen= 0;
 		for (size_t i = 1; i < path_side1.size(); i++){
-			if (i_gen != i-1 && path_side1[i_gen] == path_side1[i-1]) {
+			if (i_gen != i-1 && path_side1[i_gen] == path_side1[i-1] && path_side2[i_gen] == path_side2[i-1]) {
 				i_gen = i;
 				continue;
 			}
@@ -360,6 +455,8 @@ namespace Renderer {
 			SDL_FPoint pos1p = to_FPoint(path_side2[i - 1]);
 			SDL_FPoint pos2p = to_FPoint(path_side2[i]);
 			
+			// génère le quadrilataire pos1, pos2, pos1p, pos2p 
+			// avec deux triangles ayant [pos2, pos1p] comme coté commun
 			triangles.push_back(pos1);
 			triangles.push_back(pos2);
 			triangles.push_back(pos1p);
@@ -370,33 +467,11 @@ namespace Renderer {
 		}
 		return triangles;
 	}
-	void draw_triangles(const std::vector<SDL_FPoint>& triangles) { 
-		Uint8 r, g, b, a;
-		SDL_GetRenderDrawColor(renderer, &r, &g, &b, &a); 
-		SDL_Color color = { r, g, b, a };
-		std::vector<SDL_Vertex> res;
-		res.reserve(triangles.size());
-		for (SDL_FPoint pos : triangles) {
-			res.push_back({pos, color, {0., 0.}});
-		}
-		SDL_RenderGeometry(renderer, NULL, res.data(), (int)res.size(), NULL, 0);
-	}
 	void draw_contour(const std::set<point>& squares, float ratio) {
-		path res1, res2;
-		find_contour(squares, res1, res2);
+		border_list borders;
+		find_contour(squares, borders);
 		Fpath p1, p2;
-		convert_coins_to_bord_limits(res1, res2, p1, p2, ratio);
+		convert_coins_to_bord_limits(borders, p1, p2, ratio);
 		draw_triangles( generate_triangles_thick_paths(p1, p2) );
 	}
-	void Quit() {
-		unloadImages();
-		unloadFont();
-		SDL_DestroyRenderer(renderer);
-		SDL_DestroyWindow(window);
-		TTF_Quit();
-		SDL_Quit();
-		IMG_Quit();
-	}
-
-
 }
