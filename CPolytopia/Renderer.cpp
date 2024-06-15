@@ -113,6 +113,7 @@ namespace Renderer {
 	}
 
 	
+	
 	void zoom(float zoom_scale, Vec2<int> centre) {
 		float zoom_factor_preview = zoom_factor * zoom_scale;
 		if (zoom_factor_preview >= 0.01) {
@@ -204,6 +205,33 @@ namespace Renderer {
 	}
 	
 
+	enum class TextHPos {
+		Left = 0,
+		Center = 1,
+		Right = 2
+	};
+	enum class TextVPos {
+		Top = 0,
+		Center = 1,
+		Bottom = 2
+	};
+
+
+	void drawCharChain(const char* text, int x, int y, SDL_Color color, TextHPos hp, TextVPos vp) {
+		SDL_Surface* text_surface = TTF_RenderText_Solid(font, text, color);
+		SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
+		SDL_Rect text_rect{};
+		SDL_QueryTexture(text_texture, nullptr, nullptr, &text_rect.w, &text_rect.h);
+		text_rect.x = x - ((int)vp*text_rect.w)/2;
+		text_rect.y = y - ((int)hp * text_rect.h) / 2;
+		SDL_RenderCopy(renderer, text_texture, nullptr, &text_rect);
+		SDL_FreeSurface(text_surface);
+	}
+	void drawText(const std::string& text, Vec2<int> pos, SDL_Color color, TextHPos hp, TextVPos vp) {
+		drawCharChain(text.c_str(), pos.x(), pos.y(), color, hp, vp);
+	}
+	
+	
 	void renderTestTree() {
 		TechTree ttree = generateTestTechTree();
 		drawTechTree(&ttree, Vec2(400, 300));
@@ -240,7 +268,7 @@ namespace Renderer {
 		const double rod_length = 100;
 		const int rad = 35;
 		double init_angle = (horaire ? max_angle : min_angle);
-		int n = node->m_children.size();
+		size_t n = node->m_children.size();
 		assert(max_angle > min_angle);
 		double step_angle =  (max_angle - min_angle)/( std::max(n-1., 1/2.));
 		step_angle = (horaire ? -step_angle : step_angle);
@@ -256,7 +284,7 @@ namespace Renderer {
 				a > (max_angle + min_angle)/2,
 				next_pos );
 		}
-		filledCircleRGBA(renderer, pos.x(), pos.y(), rad, 255, 0, 0, 255);
+		filledCircleRGBA(renderer, (Sint16)pos.x(), (Sint16)pos.y(), rad, 255, 0, 0, 255);
 		drawText(node->m_name, pos - Vec2(0, 5), {255, 255, 255, 255}, TextHPos::Center, TextVPos::Center);
 	}
 	// Draws tech tree in a star shape as evenly spaced as possible
@@ -264,8 +292,8 @@ namespace Renderer {
 		const double rod_length = 100;
 		//const int rad = 30;
 		//filledCircleRGBA(renderer, pos.x(), pos.y(), rad, 255, 0, 0, 255);
-		const TechTree::TechNode & const parent = ttree->m_parentNode;
-		const int nb_childs = parent.m_children.size();
+		const TechTree::TechNode & parent = ttree->m_parentNode;
+		const size_t nb_childs = parent.m_children.size();
 		double step_angle = 2 * M_PI / nb_childs;
 		for (size_t i = 0; i < nb_childs; i++) {
 			double a = i * step_angle ;
@@ -276,42 +304,10 @@ namespace Renderer {
 				pos + Vec2(std::cos(a), std::sin(a)) * rod_length); 
 		}
 	}
-
-
-	enum class TextHPos {
-		Left = 0,
-		Center = 1,
-		Right = 2
-	};
-	enum class TextVPos {
-		Top = 0,
-		Center = 1,
-		Bottom = 2
-	};
-	void drawCharChain(const char* text, int x, int y, SDL_Color color, TextHPos hp, TextVPos vp) {
-		SDL_Surface* text_surface = TTF_RenderText_Solid(font, text, color);
-		SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
-		SDL_Rect text_rect{};
-		SDL_QueryTexture(text_texture, nullptr, nullptr, &text_rect.w, &text_rect.h);
-		text_rect.x = x - ((int)vp*text_rect.w)/2;
-		text_rect.y = y - ((int)hp * text_rect.h) / 2;
-		SDL_RenderCopy(renderer, text_texture, nullptr, &text_rect);
-		SDL_FreeSurface(text_surface);
-	}
-	void drawText(const std::string& text, Vec2<int> pos, SDL_Color color, TextHPos hp, TextVPos vp) {
-		drawCharChain(text.c_str(), pos.x(), pos.y(), color, hp, vp);
-	}
 	
-	
-	void border_list::verify_sizes() const {
-		assert(intersections.size() == centers.size());
+	SDL_FPoint to_FPoint(Vec2<float> v) {
+		return { v.x(), v.y() };
 	}
-	int border_list::size() const {
-		verify_sizes();
-		return intersections.size();
-	}
-	
-	
 	void draw_triangles(const std::vector<SDL_FPoint>& triangles) { 
 		Uint8 r, g, b, a;
 		SDL_GetRenderDrawColor(renderer, &r, &g, &b, &a); 
@@ -329,6 +325,15 @@ namespace Renderer {
 			to_FPoint(pos + Vec2(w, h)), to_FPoint(pos + Vec2(w, 0)), to_FPoint(pos + Vec2(0, h)) 
 		};
 		draw_triangles(triangles);
+	}
+	
+	
+	void border_list::verify_sizes() const {
+		assert(intersections.size() == centers.size());
+	}
+	size_t border_list::size() const {
+		verify_sizes();
+		return intersections.size();
 	}
 	
 
@@ -424,7 +429,7 @@ namespace Renderer {
 		out_borders.verify_sizes();
 	}
 	void convert_coins_to_bord_limits(const border_list& borders, Fpath& limit_ext, Fpath& limit_int , float bord_width_ratio) {
-		const int n = borders.size();
+		const size_t n = borders.size();
 		const Vec2<float> centre(421.f * zoom_factor, 461.f * zoom_factor);
 		const Vec2<float> top_to_center(0, zoom_factor * tile_size.y() / 2.f);
 		const Vec2<float> coin_haut = centre - top_to_center;
@@ -436,9 +441,6 @@ namespace Renderer {
 			Vec2<float> c = coin_haut + top_to_center + map_to_cartesian(borders.centers[i]);
 			limit_int.push_back( (c * bord_width_ratio + limit_ext[i] * (1 - bord_width_ratio)) );
 		}
-	}
-	SDL_FPoint to_FPoint(Vec2<float> v) {
-		return { v.x(), v.y() };
 	}
 	std::vector<SDL_FPoint> generate_triangles_thick_paths(const Fpath& path_side1, const Fpath& path_side2) {
 		assert(path_side1.size() == path_side2.size());

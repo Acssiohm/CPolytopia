@@ -3,18 +3,18 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include "SDL2/SDL_ttf.h"
-
-#include "IDs.h"
-#include "Unit.h"
+#include <SDL2/SDL_render.h>
 
 #include <string>
 #include <iostream>
+#include <set>
+
+#include "IDs.h"
+#include "Unit.h"
 #include "Vec.h"
 #include "Map.h"
 #include "ImageStore.h"
 #include "Image.h"
-#include <set>
-#include <SDL2/SDL_render.h>
 #include "TechTree.h"
 
 namespace Renderer {
@@ -91,7 +91,7 @@ namespace Renderer {
 		path centers;
 
 		void verify_sizes() const ;
-		int size() const;
+		size_t size() const;
 	};
 
 	// Renders the map carte on the the player p perspective  
