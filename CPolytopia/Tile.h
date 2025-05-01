@@ -1,37 +1,40 @@
-#pragma once
-#include "IDs.h"
-#include "Unit.h"
+#pragma once  
+#include "IDs.h"  
+#include "Unit.h" 
 
-// Stores the informtions about a what does contain a 
-class Tile {
-public:
-	Tile(
-		TerrainID terrain = TerrainID::Field,
-		TerrainAlterationID alteration = TerrainAlterationID::None,
-		ResourceID resource = ResourceID::None,
-		BuildingID building = BuildingID::None,
-		Unit unit = Unit());
-	TerrainID getTerrain() const;
-	void setTerrain(TerrainID t);
+class Unit;
+// Stores the information about what a tile contains  
+class Tile {  
+public:  
+   Tile(  
+       TerrainID terrain = TerrainID::Field,  
+       TerrainAlterationID alteration = TerrainAlterationID::None,  
+       ResourceID resource = ResourceID::None,  
+       BuildingID building = BuildingID::None,  
+       Unit* unit = nullptr);
 
-	TerrainAlterationID getAlteration() const;
-	bool setAlteration(TerrainAlterationID a);
+   TerrainID getTerrain() const;  
+   void setTerrain(TerrainID t);  
 
-	ResourceID getResource() const;
-	bool setResource(ResourceID res);
+   TerrainAlterationID getAlteration() const;  
+   bool setAlteration(TerrainAlterationID a);  
 
-	BuildingID getBuilding() const;
-	bool setBuilding(BuildingID build);
+   ResourceID getResource() const;  
+   bool setResource(ResourceID res);  
 
-	Unit getUnit() const;
-	bool setUnit(Unit unit);
+   BuildingID getBuilding() const;  
+   bool setBuilding(BuildingID build);  
 
-	void check();
-private:
-	TerrainID m_terrain;
-	TerrainAlterationID m_alteration;
-	ResourceID m_resource;
-	BuildingID m_building;
-	Unit m_unit;
+   Unit* getUnit();  
+   const Unit* getUnit() const;  
+   bool setUnit(Unit* unit);  
+   UnitID getUnitType() const;  
+
+   void check();  
+private:  
+   TerrainID m_terrain;  
+   TerrainAlterationID m_alteration;  
+   ResourceID m_resource;  
+   BuildingID m_building;  
+   Unit* m_unit;  
 };
-

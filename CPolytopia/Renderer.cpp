@@ -30,12 +30,12 @@ namespace Renderer {
 	 
 	void loadImages (){
 		images = new ImageStore( renderer ,"./images/");
-		
+
+		images->add_image("Tribe.png"		, BuildingID::Capital);
 		images->add_image("Grass.png"		, TerrainID::Field);
 		images->add_image("Mountain.png"	, TerrainID::Mountain);
 		images->add_image("Water.png"		, TerrainID::Water);
 		images->add_image("Ocean.png"		, TerrainID::Ocean);
-		
 		images->add_image("Forest.png"		, TerrainAlterationID::Forest);
 		
 		images->add_image("Fruit.png"		, ResourceID::Fruit);
@@ -161,15 +161,7 @@ namespace Renderer {
 			zoom_factor
 		);
 	}
-	void renderUnits(const Map& carte) {
-		for (int i = 0; i < carte.getSize(); i++) {
-			for (int j = 0; j < carte.getSize(); j++) {
-				//if (cannot_be_visible(i, j)) {continue;}
-				const Tile* tile = carte.getTileAt(i, j);
-				render(tile->getUnit().m_type, i, j);
-			}
-		}
-	}
+	
 	void renderAll(const Map& carte, const Player& p, const std::set<point>& squares_selected, bool map_vs_ttree) {
 		if (!map_vs_ttree) {
 			renderTestTree();
@@ -177,7 +169,6 @@ namespace Renderer {
 		}
 		renderMap(carte, p);
 		draw_contour(squares_selected);
-		renderUnits(carte);
 
 		int h = 90;
 		SDL_SetRenderDrawColor(renderer, 0, 0, 40, 255);
@@ -200,6 +191,7 @@ namespace Renderer {
 				else {
 					render(tile->getBuilding(), i, j);
 				}
+				render(tile->getUnitType(), i, j);
 			}
 		}
 	}

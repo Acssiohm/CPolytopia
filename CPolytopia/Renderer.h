@@ -96,8 +96,6 @@ namespace Renderer {
 
 	// Renders the map carte on the the player p perspective  
 	void renderMap(const Map &carte, const Player& p);
-	// Renders units on the map
-	void renderUnits(const Map& carte);
 	// Renders the technologie tree  in "tree" with the central point being at "pos"
 	void drawTechTree(const TechTree* ttree, Vec2<double> pos);
 	TechTree generateTestTechTree();

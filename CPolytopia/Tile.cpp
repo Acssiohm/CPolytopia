@@ -1,11 +1,12 @@
 #include "Tile.h"
+#include <iostream>
 
 Tile::Tile(
 	TerrainID terrain,
 	TerrainAlterationID alteration,
 	ResourceID resource,
 	BuildingID building,
-	Unit unit) :
+	Unit * unit) :
 	m_terrain(terrain), m_alteration(alteration), m_resource(resource), m_building(building), m_unit(unit) {}
 
 TerrainID Tile::getTerrain() const {
@@ -43,12 +44,25 @@ bool Tile::setBuilding(BuildingID build) {
 }
 
 
-Unit Tile::getUnit() const {
+Unit * Tile::getUnit() {
 	return m_unit;
 }
-bool Tile::setUnit(Unit unit) {
+const Unit* Tile::getUnit() const {
+	return m_unit;
+}
+bool Tile::setUnit(Unit * unit) {
+	if (m_unit && unit) {
+		std::cerr << "Error: Tile already has a unit!" << std::endl;
+		std::cerr << "Unit type: " << (int)m_unit->getType() << std::endl;
+	}
 	m_unit = unit;
 	return true;
+}
+UnitID Tile::getUnitType() const {
+	if (m_unit) {
+		return m_unit->getType();
+	}
+	return UnitID::None;
 }
 
 void Tile::check() {
