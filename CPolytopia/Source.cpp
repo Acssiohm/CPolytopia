@@ -8,22 +8,30 @@ int main(int argc, char ** argv) {
 	srand((unsigned int)time(NULL));
 	Renderer::Init();
 	Map carte(20);
-	Player p(carte);
-	for (int i = 0; i < 20; i++){
+	Player p1(carte);
+	Player p2(carte);
+	Player * p = &p1; 
+	int turn = 1;
+	for (int i = 0; i < 10; i++){
 		for (int j = 0; j < 20; j++) {
-			p.discover(i, j);
+			p->discover(i, j);
 		}
 	}
-	carte.getTileAt(1, 1)->setUnit(Unit(&p, UnitID::Warrior));
-	carte.getTileAt(1, 2)->setUnit(Unit(&p, UnitID::Archer));
-	carte.getTileAt(1, 3)->setUnit(Unit(&p, UnitID::Catapult));
-	carte.getTileAt(1, 4)->setUnit(Unit(&p, UnitID::Cloak));
-	carte.getTileAt(1, 5)->setUnit(Unit(&p, UnitID::Defender));
-	carte.getTileAt(1, 6)->setUnit(Unit(&p, UnitID::Giant));
-	carte.getTileAt(1, 7)->setUnit(Unit(&p, UnitID::Knight));
-	carte.getTileAt(1, 8)->setUnit(Unit(&p, UnitID::MindBender));
-	carte.getTileAt(1, 9)->setUnit(Unit(&p, UnitID::Rider));
-	carte.getTileAt(1, 10)->setUnit(Unit(&p, UnitID::Swordsman));
+	for (int i = 10; i < 20; i++) {
+		for (int j = 0; j < 20; j++) {
+			p2.discover(i, j);
+		}
+	}
+	carte.getTileAt(1, 1)->setUnit(new Unit(carte, p, UnitID::Warrior));
+	carte.getTileAt(1, 2)->setUnit(new Unit(carte, p, UnitID::Archer));
+	carte.getTileAt(1, 3)->setUnit(new Unit(carte, p, UnitID::Catapult));
+	carte.getTileAt(1, 4)->setUnit(new Unit(carte, p, UnitID::Cloak));
+	carte.getTileAt(1, 5)->setUnit(new Unit(carte, p, UnitID::Defender));
+	carte.getTileAt(1, 6)->setUnit(new Unit(carte, p, UnitID::Giant));
+	carte.getTileAt(1, 7)->setUnit(new Unit(carte, p, UnitID::Knight));
+	carte.getTileAt(1, 8)->setUnit(new Unit(carte, p, UnitID::MindBender));
+	carte.getTileAt(1, 9)->setUnit(new Unit(carte, p, UnitID::Rider));
+	carte.getTileAt(1, 10)->setUnit(new Unit(carte, p, UnitID::Swordsman));
 
 	carte.setRandomMap();
 	std::set<std::tuple<int, int>> cases;
@@ -37,9 +45,14 @@ int main(int argc, char ** argv) {
 	cases.insert({ 4, 3 });
 	cases.insert({ 2, 3 });
 	cases.insert({ 3, 2 });
+	cases = {};
+
+	bool is_selected = false;
+	std::tuple<int, int> selected_case = { 0, 0 };
+
 	SDL_SetRenderDrawColor(Renderer::renderer, 230, 120 , 0, 200);
 	bool is_map_visible = true;
-	Renderer::renderAll(carte, p, cases, is_map_visible);
+	Renderer::renderAll(carte, *p, cases, is_map_visible);
 	Renderer::update();
 	bool on_hold = false;
 	SDL_bool run = SDL_TRUE;
@@ -56,13 +69,29 @@ int main(int argc, char ** argv) {
 					int mouseX, mouseY;
 					SDL_GetMouseState(&mouseX, &mouseY);
 					Vec2 clicked = Renderer::cartesian_to_map(mouseX, mouseY);
-					if (cases.contains(clicked)) {
+					if (!carte.isInBounds(clicked.x(), clicked.y())) {
+						
+					} else if (cases.contains(clicked)) {
 						cases.erase(clicked); 
 					} else {
-						cases.insert(clicked);
+						if (cases.size() > 0) {
+							auto cref = cases.begin();
+							auto c = *cref;
+							cases.erase(cases.begin(), cases.end());
+							if (carte.getTileAt(std::get<0>(c), std::get<1>(c))->getUnit() != nullptr) {
+								carte.moveUnit(std::get<0>(c), std::get<1>(c), std::get<0>((Renderer::point)clicked), std::get<1>((Renderer::point)clicked));
+							}
+							else {
+								cases.insert(clicked);
+							}
+							
+						} else {
+							cases = { clicked };
+						}
+						
 					}
 					Renderer::clear();
-					Renderer::renderAll(carte, p , cases, is_map_visible);
+					Renderer::renderAll(carte, *p , cases, is_map_visible);
 					Renderer::update(); 
 				}
 				break;
@@ -75,7 +104,7 @@ int main(int argc, char ** argv) {
 				if (on_hold) {
 					Renderer::move(event.motion.xrel, event.motion.yrel);
 					Renderer::clear();
-					Renderer::renderAll(carte, p, cases, is_map_visible);
+					Renderer::renderAll(carte, *p, cases, is_map_visible);
 					Renderer::update();
 				}
 				break;
@@ -90,7 +119,7 @@ int main(int argc, char ** argv) {
 
 				}
 				Renderer::clear();
-				Renderer::renderAll(carte, p, cases, is_map_visible);
+				Renderer::renderAll(carte, *p, cases, is_map_visible);
 				Renderer::update();
 
 				break;
@@ -111,9 +140,18 @@ int main(int argc, char ** argv) {
 					std::cout << Renderer::cloud_shift << std::endl;
 				}else if (event.key.keysym.sym == SDLK_m){
 					is_map_visible = !is_map_visible;
+				}else if (event.key.keysym.sym == SDLK_t) {
+					if (turn == 1) {
+						turn = 2;
+						p = &p2;
+					}
+					else {
+						turn = 1;
+						p = &p1;
+					}
 				}
 				Renderer::clear();
-				Renderer::renderAll(carte, p, cases, is_map_visible);
+				Renderer::renderAll(carte, *p, cases, is_map_visible);
 				Renderer::update();
 
 				break;
